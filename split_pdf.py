@@ -66,6 +66,10 @@ class PDFSplitterApp(tk.Tk):
         """Разделить на JPG страницы"""
         threading.Thread(target=self.split_jpg, daemon=True).start()
 
+    def has_poppler(self):
+        """Проверить, доступен ли Poppler для конвертации PDF в JPG."""
+        return (self.poppler_dir / "pdfinfo.exe").exists()
+
     def split_pdf(self):
         """Разделить PDF на отдельные страницы (PDF)"""
         output_dir = self.pdf_file.parent / self.pdf_file.stem
@@ -94,6 +98,19 @@ class PDFSplitterApp(tk.Tk):
 
     def split_jpg(self):
         """Разделить PDF на изображения (JPG)"""
+        if not self.has_poppler():
+            self.after(
+                0,
+                lambda: self.show_error(
+                    "Для разделения в JPG нужен Poppler.\n\n"
+                    "Положите Poppler рядом с программой так:\n"
+                    "poppler\\Library\\bin\\pdfinfo.exe\n\n"
+                    "Или пересоберите программу командой:\n"
+                    ".\\build_windows.ps1 -PopplerPath \"C:\\путь\\к\\poppler\""
+                ),
+            )
+            return
+
         output_dir = self.pdf_file.parent / self.pdf_file.stem
         output_dir.mkdir(exist_ok=True)
 
