@@ -2,6 +2,17 @@
 
 Небольшие программы для работы с PDF в Windows.
 
+## Скачать готовую программу
+
+Скачайте последнюю версию здесь:
+
+[Скачать PDF Tools for Windows](https://github.com/hkshmo/pdf-tools-windows/releases/latest)
+
+В разделе `Assets` выберите:
+
+- `merge_pdf.exe`
+- `split_pdf.exe`
+
 ## Возможности
 
 - объединение нескольких PDF и изображений в один PDF;
