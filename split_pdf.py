@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
-from pdf2image import convert_from_path
+import pymupdf
 from PyPDF2 import PdfReader, PdfWriter
 import threading
 
@@ -66,10 +66,6 @@ class PDFSplitterApp(tk.Tk):
         """Разделить на JPG страницы"""
         threading.Thread(target=self.split_jpg, daemon=True).start()
 
-    def has_poppler(self):
-        """Проверить, доступен ли Poppler для конвертации PDF в JPG."""
-        return (self.poppler_dir / "pdfinfo.exe").exists()
-
     def split_pdf(self):
         """Разделить PDF на отдельные страницы (PDF)"""
         output_dir = self.pdf_file.parent / self.pdf_file.stem
@@ -98,38 +94,26 @@ class PDFSplitterApp(tk.Tk):
 
     def split_jpg(self):
         """Разделить PDF на изображения (JPG)"""
-        if not self.has_poppler():
-            self.after(
-                0,
-                lambda: self.show_error(
-                    "Для разделения в JPG нужен Poppler.\n\n"
-                    "Положите Poppler рядом с программой так:\n"
-                    "poppler\\Library\\bin\\pdfinfo.exe\n\n"
-                    "Или пересоберите программу командой:\n"
-                    ".\\build_windows.ps1 -PopplerPath \"C:\\путь\\к\\poppler\""
-                ),
-            )
-            return
-
         output_dir = self.pdf_file.parent / self.pdf_file.stem
         output_dir.mkdir(exist_ok=True)
 
         try:
-            pages = convert_from_path(
-                self.pdf_file, dpi=200, poppler_path=str(self.poppler_dir)
-            )
+            document = pymupdf.open(str(self.pdf_file))
         except Exception as e:
             self.after(0, lambda: self.show_error(str(e)))
             return
 
-        total = len(pages)
+        total = document.page_count
         self.after(0, lambda: self.progress.configure(maximum=total))
 
-        for i, page in enumerate(pages, start=1):
-            output_file = output_dir / f"{self.pdf_file.stem}_стр{i}.jpg"
-            page.save(output_file, "JPEG")
-            page.close()
-            self.after(0, lambda i=i: self.update_progress(i, total))
+        try:
+            for i, page in enumerate(document, start=1):
+                output_file = output_dir / f"{self.pdf_file.stem}_стр{i}.jpg"
+                pixmap = page.get_pixmap(dpi=200, alpha=False)
+                pixmap.save(str(output_file))
+                self.after(0, lambda i=i: self.update_progress(i, total))
+        finally:
+            document.close()
 
         self.after(0, lambda: self.finish(total, output_dir))
 
@@ -163,12 +147,10 @@ if __name__ == "__main__":
 
     pdf_file = sys.argv[1]
 
-    # Путь к Poppler (папка poppler рядом с exe)
     if getattr(sys, "_MEIPASS", False):
         base_path = Path(sys._MEIPASS)
     else:
         base_path = Path(__file__).parent
-    poppler_path = base_path / "poppler" / "Library" / "bin"
 
-    app = PDFSplitterApp(pdf_file, poppler_path)
+    app = PDFSplitterApp(pdf_file, base_path)
     app.mainloop()
