@@ -1,7 +1,3 @@
-param(
-    [string]$PopplerPath = ""
-)
-
 $ErrorActionPreference = "Stop"
 $ProjectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ProjectDir
@@ -28,11 +24,6 @@ $SplitArgs = @(
     "--windowed",
     "--name", "split_pdf"
 )
-
-if ($PopplerPath) {
-    $ResolvedPoppler = (Resolve-Path $PopplerPath).Path
-    $SplitArgs += @("--add-data", "$ResolvedPoppler;poppler")
-}
 
 $SplitArgs += "split_pdf.py"
 & ".venv\Scripts\pyinstaller.exe" @SplitArgs
