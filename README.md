@@ -32,21 +32,14 @@ python merge_pdf.py файл1.pdf файл2.pdf изображение.jpg
 python split_pdf.py документ.pdf
 ```
 
-Для сохранения страниц в JPG нужен Poppler. Его можно положить в папку
-`poppler\Library\bin` рядом со скриптом или добавить в `PATH`.
+Разделение в JPG работает без отдельной установки Poppler.
 
 ## Сборка для Windows
 
-Без встроенного Poppler:
+Запустите:
 
 ```powershell
 .\build_windows.ps1
-```
-
-Со встроенным Poppler:
-
-```powershell
-.\build_windows.ps1 -PopplerPath "C:\путь\к\poppler"
 ```
 
 Готовые файлы появятся в папке `dist`:
