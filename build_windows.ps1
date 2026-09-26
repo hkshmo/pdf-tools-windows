@@ -37,4 +37,4 @@ if ($PopplerPath) {
 $SplitArgs += "split_pdf.py"
 & ".venv\Scripts\pyinstaller.exe" @SplitArgs
 
-Write-Host "Готово. Программы находятся в папке dist."
+Write-Host "Done. Programs are in the dist folder."
