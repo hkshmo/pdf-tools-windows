@@ -68,54 +68,52 @@ class PDFSplitterApp(tk.Tk):
 
     def split_pdf(self):
         """Разделить PDF на отдельные страницы (PDF)"""
-        output_dir = self.pdf_file.parent / self.pdf_file.stem
-        output_dir.mkdir(exist_ok=True)
-
         try:
+            output_dir = self.pdf_file.parent / self.pdf_file.stem
+            output_dir.mkdir(exist_ok=True)
             reader = PdfReader(str(self.pdf_file))
             total = len(reader.pages)
+
+            self.after(0, lambda: self.progress.configure(maximum=total))
+
+            for i, page in enumerate(reader.pages, start=1):
+                writer = PdfWriter()
+                writer.add_page(page)
+
+                output_file = output_dir / f"{self.pdf_file.stem}_стр{i}.pdf"
+                with open(output_file, "wb") as f:
+                    writer.write(f)
+
+                self.after(0, lambda i=i: self.update_progress(i, total))
+
+            self.after(0, lambda: self.finish(total, output_dir))
         except Exception as e:
-            self.after(0, lambda: self.show_error(str(e)))
-            return
-
-        self.after(0, lambda: self.progress.configure(maximum=total))
-
-        for i, page in enumerate(reader.pages, start=1):
-            writer = PdfWriter()
-            writer.add_page(page)
-
-            output_file = output_dir / f"{self.pdf_file.stem}_стр{i}.pdf"
-            with open(output_file, "wb") as f:
-                writer.write(f)
-
-            self.after(0, lambda i=i: self.update_progress(i, total))
-
-        self.after(0, lambda: self.finish(total, output_dir))
+            msg = str(e)
+            self.after(0, lambda msg=msg: self.show_error(msg))
 
     def split_jpg(self):
         """Разделить PDF на изображения (JPG)"""
-        output_dir = self.pdf_file.parent / self.pdf_file.stem
-        output_dir.mkdir(exist_ok=True)
-
         try:
+            output_dir = self.pdf_file.parent / self.pdf_file.stem
+            output_dir.mkdir(exist_ok=True)
             document = pymupdf.open(str(self.pdf_file))
-        except Exception as e:
-            self.after(0, lambda: self.show_error(str(e)))
-            return
 
-        total = document.page_count
-        self.after(0, lambda: self.progress.configure(maximum=total))
+            total = document.page_count
+            self.after(0, lambda: self.progress.configure(maximum=total))
 
-        try:
             for i, page in enumerate(document, start=1):
                 output_file = output_dir / f"{self.pdf_file.stem}_стр{i}.jpg"
                 pixmap = page.get_pixmap(dpi=200, alpha=False)
                 pixmap.save(str(output_file))
                 self.after(0, lambda i=i: self.update_progress(i, total))
-        finally:
-            document.close()
 
-        self.after(0, lambda: self.finish(total, output_dir))
+            self.after(0, lambda: self.finish(total, output_dir))
+        except Exception as e:
+            msg = str(e)
+            self.after(0, lambda msg=msg: self.show_error(msg))
+        finally:
+            if "document" in locals():
+                document.close()
 
     def update_progress(self, i, total):
         """Обновить прогресс-бар"""
