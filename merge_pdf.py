@@ -14,62 +14,67 @@ def natural_sort_key(s):
 def combine_to_pdf(file_paths):
     temp_pdfs = []
 
-    # сортировка файлов по естественному порядку
-    file_paths.sort(key=natural_sort_key)
+    try:
+        # сортировка файлов по естественному порядку
+        file_paths.sort(key=natural_sort_key)
 
-    for path_str in file_paths:
-        path = Path(path_str)
-        if not path.exists():
-            continue
+        for path_str in file_paths:
+            path = Path(path_str)
+            if not path.exists():
+                continue
 
-        ext = path.suffix.lower()
+            ext = path.suffix.lower()
 
-        if ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".gif"]:
-            im = Image.open(path).convert("RGB")
-            temp_pdf = path.with_suffix(".temp.pdf")
-            im.save(temp_pdf)
-            temp_pdfs.append(temp_pdf)
+            if ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".gif"]:
+                im = Image.open(path).convert("RGB")
+                temp_pdf = path.with_suffix(".temp.pdf")
+                im.save(temp_pdf)
+                temp_pdfs.append(temp_pdf)
 
-        elif ext == ".pdf":
-            temp_pdfs.append(path)
+            elif ext == ".pdf":
+                temp_pdfs.append(path)
 
-    if not temp_pdfs:
+        if not temp_pdfs:
+            tk.Tk().withdraw()
+            messagebox.showerror("Ошибка", "Нет подходящих файлов для объединения (jpg/png/pdf).")
+            return
+
+        # --- Запрос имени итогового PDF ---
+        root = tk.Tk()
+        root.withdraw()
+        output_name = simpledialog.askstring(
+            "Сохранить как",
+            "Введите имя итогового PDF файла:",
+            initialvalue="Объединенный_файл"
+        )
+
+        if not output_name:  # если пользователь отменил или оставил пустое
+            messagebox.showinfo("Отмена", "Операция объединения отменена.")
+            return
+
+        output_name = output_name.strip()
+        if not output_name.lower().endswith(".pdf"):
+            output_name += ".pdf"
+
+        output = Path(file_paths[0]).parent / output_name
+
+        # --- Объединение PDF ---
+        merger = PdfMerger()
+        for pdf in temp_pdfs:
+            merger.append(str(pdf))
+        merger.write(output)
+        merger.close()
+
+        messagebox.showinfo("Готово", f"Создан файл:\n{output.name}")
+    except Exception as e:
         tk.Tk().withdraw()
-        messagebox.showerror("Ошибка", "Нет подходящих файлов для объединения (jpg/png/pdf).")
-        return
-
-    # --- Запрос имени итогового PDF ---
-    root = tk.Tk()
-    root.withdraw()
-    output_name = simpledialog.askstring(
-        "Сохранить как", 
-        "Введите имя итогового PDF файла:",
-        initialvalue="Объединенный_файл"
-    )
-
-    if not output_name:  # если пользователь отменил или оставил пустое
-        messagebox.showinfo("Отмена", "Операция объединения отменена.")
-        return
-
-    output_name = output_name.strip()
-    if not output_name.lower().endswith(".pdf"):
-        output_name += ".pdf"
-
-    output = Path(file_paths[0]).parent / output_name
-
-    # --- Объединение PDF ---
-    merger = PdfMerger()
-    for pdf in temp_pdfs:
-        merger.append(str(pdf))
-    merger.write(output)
-    merger.close()
-
-    # удалить временные pdf, созданные из изображений
-    for pdf in temp_pdfs:
-        if pdf.name.endswith(".temp.pdf"):
-            pdf.unlink(missing_ok=True)
-
-    messagebox.showinfo("Готово", f"Создан файл:\n{output.name}")
+        messagebox.showerror("Ошибка при объединении PDF", str(e))
+        sys.exit(1)
+    finally:
+        # удалить временные pdf, созданные из изображений
+        for pdf in temp_pdfs:
+            if pdf.name.endswith(".temp.pdf"):
+                pdf.unlink(missing_ok=True)
 
 if __name__ == "__main__":
     files = sys.argv[1:]
