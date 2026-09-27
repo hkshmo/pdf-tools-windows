@@ -49,6 +49,49 @@ shell:sendto
 Правая кнопка мыши -> Отправить -> Разделить PDF
 ```
 
+## English quick start
+
+PDF Tools for Windows is a small set of Windows utilities for merging PDF files
+and splitting PDF pages into PDF or JPG files.
+
+Download the latest release here:
+
+[Download PDF Tools for Windows](https://github.com/hkshmo/pdf-tools-windows/releases/latest)
+
+From `Assets`, download:
+
+- `merge_pdf.exe`
+- `split_pdf.exe`
+
+Create this folder:
+
+```text
+C:\PDF Tools
+```
+
+Move both `.exe` files into that folder.
+
+To add the tools to the Windows `Send to` menu:
+
+1. Press `Win + R`.
+2. Enter:
+
+```text
+shell:sendto
+```
+
+3. In the opened folder, create shortcuts to:
+
+- `C:\PDF Tools\merge_pdf.exe`
+- `C:\PDF Tools\split_pdf.exe`
+
+After that, select your files, right-click them, and use:
+
+```text
+Send to -> merge_pdf
+Send to -> split_pdf
+```
+
 ## Как пользоваться
 
 У программ нет главного окна, которое нужно открывать отдельно. Они работают с
